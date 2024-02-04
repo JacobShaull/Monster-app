@@ -3,14 +3,15 @@ import os
 
 from Fortuna import random_int, random_float
 from MonsterLab import Monster
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, current_app
 from pandas import DataFrame
 
-from app.data import Database
-from app.graph import chart
-from app.machine import Machine
+from data import Database
+from graph import chart
+from machine import Machine
 
-SPRINT = 0
+
+SPRINT = 21
 APP = Flask(__name__)
 
 
@@ -38,28 +39,34 @@ def data():
 
 @APP.route("/view", methods=["GET", "POST"])
 def view():
-    if SPRINT < 2:
-        return render_template("view.html")
-    db = Database()
-    options = ["Level", "Health", "Energy", "Sanity", "Rarity"]
-    x_axis = request.values.get("x_axis") or options[1]
-    y_axis = request.values.get("y_axis") or options[2]
-    target = request.values.get("target") or options[4]
-    graph = chart(
-        df=db.dataframe(),
-        x=x_axis,
-        y=y_axis,
-        target=target,
-    ).to_json()
-    return render_template(
-        "view.html",
-        options=options,
-        x_axis=x_axis,
-        y_axis=y_axis,
-        target=target,
-        count=db.count(),
-        graph=graph,
-    )
+    try:
+        if SPRINT < 2:
+            return render_template("view.html")
+        db = Database()
+        options = ["Level", "Health", "Energy", "Sanity", "Rarity"]
+        x_axis = request.values.get("x_axis") or options[1]
+        y_axis = request.values.get("y_axis") or options[2]
+        target = request.values.get("target") or options[4]
+        df = db.dataframe()
+        current_app.logger.info(f"DataFrame head: {df.head()}")
+        graph = chart(
+            df=df,
+            x=f"{x_axis}:Q",
+            y=f"{y_axis}:Q",
+            target=f"{target}:N",
+        ).to_json()
+        return render_template(
+            "view.html",
+            options=options,
+            x_axis=x_axis,
+            y_axis=y_axis,
+            target=target,
+            count=db.count(),
+            graph=graph,
+        )
+    except Exception as e:
+        current_app.logger.error(f"An error occurred: {e}")
+        raise  # Reraise the exception to get the stack trace in the Flask server output
 
 
 @APP.route("/model", methods=["GET", "POST"])
@@ -95,6 +102,20 @@ def model():
         confidence=f"{confidence:.2%}",
     )
 
+@APP.route("/monsters")
+def show_monsters():
+    db = Database()
+    monsters = db.dataframe().to_dict(orient='records')
+    print(monsters)  # This will print the data in your Flask console
+    return render_template('monsters.html', monsters=monsters)
+
+@APP.route("/seed")
+def seed_database():
+    db = Database()
+    db.seed(1000)  # Adjust the number as needed
+    return "Database has been seeded with monsters."
+
+
 
 if __name__ == '__main__':
-    APP.run()
+    APP.run(debug=True)

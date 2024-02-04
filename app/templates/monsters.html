@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monster Data</title>
+</head>
+<body>
+    <h1>Monsters</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <!-- Add table headers matching the monster attributes -->
+                <th>Name</th>
+                <th>Level</th>
+                <th>Health</th>
+                <!-- ... other attributes ... -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for monster in monsters %}
+                <tr>
+                    <td>{{ monster.Name }}</td>
+                    <td>{{ monster.Level }}</td>
+                    <td>{{ monster.Health }}</td>
+                    <!-- ... other attributes ... -->
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
