@@ -3,6 +3,11 @@
     <h1>Bandersnatch Model</h1>
     <p>{{ info | safe }}</p>
 
+    <!-- Static Base Model and Dynamic Timestamp -->
+    <p>Base Model: Random Forest Classifier</p>
+    <p>Timestamp: {{ timestamp }}</p>
+
+
     <h2>Prediction Basis</h2>
     <form id="form" method="post" action="{{ url_for('model') }}">
         <p><label>

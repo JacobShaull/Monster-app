@@ -4,12 +4,12 @@ import os
 from Fortuna import random_int, random_float
 from MonsterLab import Monster
 from flask import Flask, render_template, request, current_app
-from pandas import DataFrame
+import pandas as pd
+import joblib
 
 from data import Database
 from graph import chart
 from machine import Machine
-
 
 SPRINT = 21
 APP = Flask(__name__)
@@ -75,19 +75,21 @@ def model():
         return render_template("model.html")
     db = Database()
     options = ["Level", "Health", "Energy", "Sanity", "Rarity"]
-    filepath = os.path.join("app", "model.joblib")
+    filepath = os.path.join(os.getcwd(), "model.joblib")
     if not os.path.exists(filepath):
         df = db.dataframe()
-        machine = Machine(df[options])
+        machine = Machine.from_dataframe(df[options])
         machine.save(filepath)
     else:
-        machine = Machine.open(filepath)
+        model = joblib.load(filepath)
+        machine = Machine(model)
+
     stats = [round(random_float(1, 250), 2) for _ in range(3)]
     level = request.values.get("level", type=int) or random_int(1, 20)
     health = request.values.get("health", type=float) or stats.pop()
     energy = request.values.get("energy", type=float) or stats.pop()
     sanity = request.values.get("sanity", type=float) or stats.pop()
-    prediction, confidence = machine(DataFrame(
+    prediction, confidence = machine(pd.DataFrame(
         [dict(zip(options, (level, health, energy, sanity)))]
     ))
     info = machine.info()
